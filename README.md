@@ -52,9 +52,9 @@
    - Status updates
    - Temperature monitoring
 
-## Task Distribution
+# Tasks
 
-### Task 1 (Auth & Core Dashboards)
+## Task 1 (Auth & Core Dashboards)
 
 #### Step 1: Authentication & Landing Page
 **Pages & Components:**
@@ -121,7 +121,7 @@
   - [ ] `/api/documents/upload` - Document upload
   - [ ] `/api/settings/*` - Settings management
 
-### Task 2 (Admin & Core Features)
+## Task 2 (Admin & Core Features)
 
 #### Step 1: Admin Dashboard
 **Pages & Components:**
@@ -182,7 +182,7 @@
   - [ ] `/api/tracking/status` - Status
   - [ ] `/api/tracking/alerts` - Alerts
 
-### Backend Tasks (API & Firebase integration)
+## Backend Tasks (API & Firebase integration)
 
 #### Step 1: Core Authentication & Database
 - [ ] Implement authentication endpoints:
@@ -316,27 +316,86 @@ medilink/
 └── tsconfig.json       # TypeScript configuration
 ```
 
-### Key Directories Explained
+### Directories
 
-- `app/`: Contains all pages and API routes using Next.js 15 App Router
-  - `(marketing)/`: Public pages (landing, about, etc.)
-  - `(dashboard)/`: Protected routes requiring authentication
-  - `api/`: Backend API endpoints
+#### `app/` - Next.js App Router
+The App Router uses React Server Components by default and follows a file-system based routing approach
 
-- `components/`: Reusable React components
-  - `global/`: Shared components used across the app
-  - `ui/`: Basic shadcn UI components (buttons, inputs, etc.)
-  - Feature-specific directories for organized components
+**Key Files:**
+- `layout.tsx`: Shared UI for a segment and its children
+- `page.tsx`: UI for a route segment
+- `loading.tsx`: Loading UI for a segment
+- `error.tsx`: Error UI for a segment
+- `not-found.tsx`: UI for 404 errors
 
-- `lib/`: Utility functions and configurations
-  - `firebase/`: Firebase setup and helper functions
-  - `hooks/`: Custom React hooks for shared logic
-  - `utils/`: General utility functions
+#### `api/` - API Route Handlers
+API routes in Next.js 15 use the Route Handlers pattern:
 
-- `types/`: TypeScript type definitions
-  - Shared interfaces and types
-  - API request/response types
-  - Database model types
+```typescript
+// Example Route Handler Structure
+app/api/
+├── auth/
+│   ├── login/
+│   │   └── route.ts    // POST /api/auth/login
+│   │   └── register/
+│   │       └── route.ts    // POST /api/auth/register
+│   └── donations/
+│       ├── route.ts        // GET, POST /api/donations
+│       └── [id]/
+│           └── route.ts    // GET, PUT, DELETE /api/donations/[id]
+│
+└── requests/
+    ├── route.ts        // GET, POST /api/requests
+    └── [id]/
+        ├── route.ts    // GET, PUT /api/requests/[id]
+        └── status/
+            └── route.ts // PUT /api/requests/[id]/status
+```
+
+**Route Handler Example:**
+```typescript
+// app/api/donations/route.ts
+import { NextResponse } from 'next/server'
+
+export async function GET(request: Request) {
+  // Handle GET request
+  return NextResponse.json({ data: [] })
+}
+
+export async function POST(request: Request) {
+  // Handle POST request
+  const data = await request.json()
+  return NextResponse.json({ status: 'created' })
+}
+```
+
+#### `components/` - React Components
+Organized by feature and shared functionality:
+- `global/`: Shared components used across the app
+- `ui/`: Basic shadcn UI components (buttons, inputs, etc.)
+- Feature-specific directories for organized components
+
+```
+components/
+├── ui/                   # Shadcn UI components
+│   ├── button.tsx
+│   └── input.tsx
+├── global/              # Shared components
+│   ├── Navbar.tsx
+│   └── Footer.tsx
+└── feature/            # Feature-specific components
+    ├── List.tsx
+    └── Card.tsx
+```
+
+#### `lib/` - Utility Functions
+Contains configurations and helper functions:
+- `firebase/`: Firebase setup and helper functions
+- `hooks/`: Custom React hooks for shared logic
+- `utils/`: General utility functions
+
+
+
 
 ## Tech Stack
 
@@ -352,3 +411,4 @@ medilink/
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Firebase Documentation](https://firebase.google.com/docs)
 - [TypeScript Documentation](https://www.typescriptlang.org/docs)
+
