@@ -33,7 +33,7 @@
 
 
 
-## Databsase Requirements
+## Database Requirements
 
 ### Firebase Data Collections
 1. Users & Organizations
