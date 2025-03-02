@@ -1,60 +1,45 @@
 "use client"
 
+import { useQuery } from "@tanstack/react-query"
+import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Search, Filter, Pill, Thermometer, Calendar, Package2 } from "lucide-react"
+import { Plus, Search, Filter, Pill, Thermometer, Calendar, Package2, ClockIcon } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import type { Medication } from "@/lib/types/schema"
+import { getStatusColor } from "@/lib/utils"
+import MedicationsLoading from "./loading"
 
-// Temporary data for demonstration
-const medications = [
-  {
-    id: 1,
-    name: "Amoxicillin 500mg",
-    category: "Antibiotics",
-    quantity: 5000,
-    unit: "tablets",
-    expiryDate: "2025-06-15",
-    temperature: "Room Temperature",
-    ngo: "Red Cross",
-    status: "Available",
-    image: "https://placehold.co/400x300",
-  },
-  {
-    id: 2,
-    name: "Paracetamol 650mg",
-    category: "Pain Relief",
-    quantity: 10000,
-    unit: "tablets",
-    expiryDate: "2025-08-20",
-    temperature: "Room Temperature",
-    ngo: "Doctors Without Borders",
-    status: "Limited",
-    image: "https://placehold.co/400x300",
-  },
-  {
-    id: 3,
-    name: "First Aid Kit",
-    category: "First Aid",
-    quantity: 200,
-    unit: "kits",
-    expiryDate: "2026-01-10",
-    temperature: "Room Temperature",
-    ngo: "WHO",
-    status: "Available",
-    image: "https://placehold.co/400x300",
-  },
-]
+// Function to fetch medications
+async function fetchMedications() {
+  const { data } = await axios.get<{ data: Medication[] }>('/api/medications/list')
+  return data.data
+}
 
 export default function MedicationsPage() {
   const router = useRouter()
+  
+  // Fetch medications using React Query
+  const { data: medications = [], isLoading, error } = useQuery({
+    queryKey: ['medications'],
+    queryFn: fetchMedications
+  })
 
-  const handleRequestClick = (medicationId: number) => {
-    router.push(`/requests/${medicationId}`)
+  const handleRequestClick = (medicationId: string) => {
+    router.push(`/requests/create/${medicationId}`)
+  }
+
+  if (isLoading) {
+    return <MedicationsLoading/>
+  }
+
+  if (error) {
+    return <div>Error loading medications</div>
   }
 
   return (
@@ -65,12 +50,12 @@ export default function MedicationsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Available Medications</h1>
           <p className="text-muted-foreground">Browse and request available medications for donation.</p>
         </div>
-        <Link href="/medications/add">
+        {/* <Link href="/medications/add">
           <Button className="w-full md:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Add Medication
           </Button>
-        </Link>
+        </Link> */}
       </div>
 
       {/* Filters Section */}
@@ -138,16 +123,16 @@ export default function MedicationsPage() {
         </div>
 
         <TabsContent value="grid" className="mt-6">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-4">
             {medications.map((medication) => (
               <Card key={medication.id} className="overflow-hidden">
                 <div className="aspect-video relative">
                   <img
-                    src={medication.image}
+                    src="https://placehold.co/400x300"
                     alt={medication.name}
                     className="object-cover w-full h-full"
                   />
-                  <Badge className="absolute top-2 right-2" variant={medication.status === "Available" ? "default" : "secondary"}>
+                  <Badge className={`absolute top-2 right-2 ${getStatusColor(medication.status)}`}>
                     {medication.status}
                   </Badge>
                 </div>
@@ -167,20 +152,30 @@ export default function MedicationsPage() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Thermometer className="h-4 w-4 text-muted-foreground" />
-                      <span>{medication.temperature}</span>
+                      <span>{medication.storageTemp}°C</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <ClockIcon className="h-4 w-4 text-muted-foreground" />
+                      <span>Added: {new Date(medication.createdAt).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Pill className="h-4 w-4 text-muted-foreground" />
-                      <span>{medication.ngo}</span>
+                      <span>{medication.donorId}</span>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex gap-2">
                   <Button 
-                    className="w-full" 
+                    variant="outline" 
+                    className="flex-1"
                     onClick={() => handleRequestClick(medication.id)}
                   >
-                    Request Medication
+                    Request
+                  </Button>
+                  <Button asChild className="flex-1">
+                    <Link href={`/medications/${medication.id}`}>
+                      View Details
+                    </Link>
                   </Button>
                 </CardFooter>
               </Card>
@@ -190,32 +185,43 @@ export default function MedicationsPage() {
 
         <TabsContent value="list" className="mt-6">
           <div className="rounded-lg border">
-            <div className="grid grid-cols-6 gap-4 p-4 font-medium border-b">
+            <div className="grid grid-cols-7 gap-4 p-4 font-medium border-b">
               <div className="col-span-2">Medication</div>
               <div>Quantity</div>
               <div>Expiry Date</div>
+              <div>Added Date</div>
               <div>Status</div>
-              <div>Action</div>
+              <div className="text-right">Actions</div>
             </div>
             {medications.map((medication) => (
-              <div key={medication.id} className="grid grid-cols-6 gap-4 p-4 items-center hover:bg-muted/50">
+              <div key={medication.id} className="grid grid-cols-7 gap-4 p-4 items-center hover:bg-muted/50">
                 <div className="col-span-2">
                   <div className="font-medium">{medication.name}</div>
                   <div className="text-sm text-muted-foreground">{medication.category}</div>
                 </div>
                 <div>{medication.quantity} {medication.unit}</div>
                 <div>{new Date(medication.expiryDate).toLocaleDateString()}</div>
+                <div>{new Date(medication.createdAt).toLocaleDateString()}</div>
                 <div>
-                  <Badge variant={medication.status === "Available" ? "default" : "secondary"}>
+                  <Badge className={getStatusColor(medication.status)}>
                     {medication.status}
                   </Badge>
                 </div>
-                <div>
+                <div className="flex justify-end gap-2">
                   <Button 
                     size="sm"
+                    variant="outline"
                     onClick={() => handleRequestClick(medication.id)}
                   >
                     Request
+                  </Button>
+                  <Button 
+                    size="sm"
+                    asChild
+                  >
+                    <Link href={`/medications/${medication.id}`}>
+                      Details
+                    </Link>
                   </Button>
                 </div>
               </div>

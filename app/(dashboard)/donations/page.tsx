@@ -1,130 +1,108 @@
 "use client"
-import React from "react"
+
+import * as React from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
-  Search, 
-  Filter, 
-  LayoutGrid, 
-  List as ListIcon,
-  Package2, 
-  Calendar,
-  Building2,
-  ArrowUpRight,
+  Package2,
   CheckCircle2,
   Clock,
-  XCircle,
-  AlertCircle,
   Truck,
-  Users
+  AlertCircle,
+  Calendar,
+  ArrowUpRight,
+  Search,
+  Filter,
+  LayoutGrid,
+  List as ListIcon
 } from "lucide-react"
-
-// Temporary data for demonstration
-const donations = [
-  {
-    id: 1,
-    name: "Amoxicillin 500mg",
-    category: "Antibiotics",
-    quantity: 5000,
-    unit: "tablets",
-    expiryDate: "2025-06-15",
-    addedDate: "2024-03-10",
-    status: "Delivered",
-    recipient: "Doctors Without Borders",
-    location: "Ethiopia",
-    image: "https://placehold.co/400x300",
-    deliveryDate: "2024-03-15",
-    trackingNumber: "TRK123456789"
-  },
-  {
-    id: 2,
-    name: "Paracetamol 650mg",
-    category: "Pain Relief",
-    quantity: 10000,
-    unit: "tablets",
-    expiryDate: "2025-08-20",
-    addedDate: "2024-03-08",
-    status: "In Transit",
-    recipient: "Red Cross",
-    location: "Sudan",
-    image: "https://placehold.co/400x300",
-    deliveryDate: null,
-    trackingNumber: "TRK987654321"
-  },
-  {
-    id: 3,
-    name: "First Aid Kit",
-    category: "First Aid",
-    quantity: 200,
-    unit: "kits",
-    expiryDate: "2026-01-10",
-    addedDate: "2024-03-05",
-    status: "Pending",
-    recipient: null,
-    location: null,
-    image: "https://placehold.co/400x300",
-    deliveryDate: null,
-    trackingNumber: null
-  },
-  {
-    id: 4,
-    name: "Insulin",
-    category: "Diabetes",
-    quantity: 1000,
-    unit: "vials",
-    expiryDate: "2024-12-25",
-    addedDate: "2024-03-01",
-    status: "Rejected",
-    recipient: "WHO",
-    location: "Yemen",
-    image: "https://placehold.co/400x300",
-    deliveryDate: null,
-    trackingNumber: null,
-    rejectionReason: "Storage temperature requirements not met"
-  }
-]
-
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'delivered':
-      return 'bg-green-500/10 text-green-500 border-green-500/20'
-    case 'in transit':
-      return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-    case 'pending':
-      return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-    case 'rejected':
-      return 'bg-red-500/10 text-red-500 border-red-500/20'
-    default:
-      return 'bg-gray-500/10 text-gray-500 border-gray-500/20'
-  }
-}
+import DonationsLoading from "./loading"
+import type { Medication } from "@/lib/types/schema"
+import { getStatusColor } from "@/lib/utils"
+import axios, { AxiosError } from "axios"
 
 const getStatusIcon = (status: string) => {
   switch (status.toLowerCase()) {
-    case 'delivered':
+    case 'available':
       return CheckCircle2
-    case 'in transit':
-      return Truck
-    case 'pending':
+    case 'reserved':
       return Clock
-    case 'rejected':
-      return XCircle
+    case 'delivered':
+      return Truck
     default:
       return AlertCircle
   }
 }
 
+async function fetchDonations() {
+  try {
+    const response = await axios.get('/api/medications/list');
+    
+    if (!response.data) {
+      console.warn('No data in response:', response);
+      return { data: [] };
+    }
+
+    // Convert date strings to Date objects
+    const data = response.data.data.map((donation: Omit<Medication, 'createdAt' | 'updatedAt' | 'expiryDate'> & {
+      createdAt: string;
+      updatedAt: string;
+      expiryDate: string;
+    }) => ({
+      ...donation,
+      createdAt: donation.createdAt ? new Date(donation.createdAt) : new Date(),
+      updatedAt: donation.updatedAt ? new Date(donation.updatedAt) : new Date(),
+      expiryDate: donation.expiryDate ? new Date(donation.expiryDate) : new Date()
+    }));
+
+    return { data };
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      console.error('Error fetching donations:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to fetch donations');
+    }
+    throw error;
+  }
+}
+
+interface MedicationsResponse {
+  data: Medication[];
+  error?: string;
+  message?: string;
+}
+
 export default function DonationsPage() {
+  const { data: { data: donations = [] } = {}, isLoading, error } = useQuery<MedicationsResponse>({
+    queryKey: ['donations'],
+    queryFn: fetchDonations,
+  });
+
   // Calculate statistics
   const stats = {
     total: donations.length,
-    delivered: donations.filter(d => d.status === 'Delivered').length,
-    inTransit: donations.filter(d => d.status === 'In Transit').length,
-    pending: donations.filter(d => d.status === 'Pending').length
+    available: donations.filter(d => d.status === 'available').length,
+    reserved: donations.filter(d => d.status === 'reserved').length,
+    delivered: donations.filter(d => d.status === 'delivered').length
+  }
+
+  if (isLoading) {
+    return <DonationsLoading />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="flex items-center gap-2 text-destructive">
+          <AlertCircle className="h-6 w-6" />
+          <p>Error loading donations. Please try again later.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -148,29 +126,29 @@ export default function DonationsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Delivered</CardTitle>
+            <CardTitle className="text-sm font-medium">Available</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
+            <div className="text-2xl font-bold">{stats.available}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Reserved</CardTitle>
+            <Clock className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.reserved}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Delivered</CardTitle>
+            <Truck className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
             <div className="text-2xl font-bold">{stats.delivered}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-            <Truck className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.inTransit}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
           </CardContent>
         </Card>
       </div>
@@ -189,18 +167,17 @@ export default function DonationsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="reserved">Reserved</SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>
-                <SelectItem value="inTransit">In Transit</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
               </SelectContent>
             </Select>
-            <Select defaultValue="all">
+            <Select defaultValue="recent">
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Most Recent</SelectItem>
+                <SelectItem value="recent">Most Recent</SelectItem>
                 <SelectItem value="oldest">Oldest First</SelectItem>
                 <SelectItem value="expiringSoon">Expiring Soon</SelectItem>
                 <SelectItem value="quantityHigh">Quantity: High to Low</SelectItem>
@@ -235,12 +212,18 @@ export default function DonationsPage() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {donations.map((donation) => (
               <Card key={donation.id} className="overflow-hidden">
-                <div className="aspect-video relative">
-                  <img
-                    src={donation.image}
-                    alt={donation.name}
-                    className="object-cover w-full h-full"
-                  />
+                <div className="aspect-video relative bg-muted">
+                  {donation.documents?.images?.[0] ? (
+                    <img
+                      src={donation.documents.images[0]}
+                      alt={donation.name}
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <Package2 className="h-12 w-12 text-muted-foreground/50" />
+                    </div>
+                  )}
                   <Badge 
                     className={`absolute top-2 right-2 border ${getStatusColor(donation.status)}`}
                   >
@@ -259,20 +242,8 @@ export default function DonationsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>Added: {new Date(donation.addedDate).toLocaleDateString()}</span>
+                      <span>Added: {donation.createdAt.toLocaleDateString()}</span>
                     </div>
-                    {donation.recipient && (
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span>{donation.recipient}</span>
-                      </div>
-                    )}
-                    {donation.location && (
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                        <span>{donation.location}</span>
-                      </div>
-                    )}
                   </div>
                   <Button 
                     variant="outline" 
@@ -291,17 +262,16 @@ export default function DonationsPage() {
         <TabsContent value="list" className="mt-6">
           <Card>
             <div className="rounded-lg border">
-              <div className="grid grid-cols-8 gap-4 p-4 font-medium border-b">
+              <div className="grid grid-cols-7 gap-4 p-4 font-medium border-b">
                 <div className="col-span-2">Medication</div>
                 <div>Status</div>
                 <div>Quantity</div>
                 <div>Added Date</div>
-                <div>Recipient</div>
-                <div>Location</div>
+                <div>Expiry Date</div>
                 <div>Action</div>
               </div>
               {donations.map((donation) => (
-                <div key={donation.id} className="grid grid-cols-8 gap-4 p-4 items-center hover:bg-muted/50">
+                <div key={donation.id} className="grid grid-cols-7 gap-4 p-4 items-center hover:bg-muted/50">
                   <div className="col-span-2">
                     <div className="font-medium">{donation.name}</div>
                     <div className="text-sm text-muted-foreground">{donation.category}</div>
@@ -315,9 +285,8 @@ export default function DonationsPage() {
                     </Badge>
                   </div>
                   <div>{donation.quantity} {donation.unit}</div>
-                  <div>{new Date(donation.addedDate).toLocaleDateString()}</div>
-                  <div>{donation.recipient || "-"}</div>
-                  <div>{donation.location || "-"}</div>
+                  <div>{donation.createdAt.toLocaleDateString()}</div>
+                  <div>{donation.expiryDate.toLocaleDateString()}</div>
                   <div>
                     <Button 
                       variant="outline" 

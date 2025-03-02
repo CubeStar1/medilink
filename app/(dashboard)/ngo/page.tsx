@@ -9,103 +9,60 @@ import { RecentRequests } from "@/components/ngo/recent-requests"
 import { AvailableMedications } from "@/components/ngo/available-medications"
 import { RequestTrends } from "@/components/ngo/request-trends"
 import { BeneficiaryGrowth } from "@/components/ngo/beneficiary-growth"
-import { ProfileForm } from "@/components/ngo/profile-form"
+import { useQuery } from "@tanstack/react-query"
+import axios from "axios"
+import type { Request, Medication } from "@/lib/types/schema"
+import NgoDashboardLoading from "./loading"
 
-// Temporary data for demonstration
-const stats = {
-  activeRequests: 12,
-  pendingDeliveries: 5,
-  medicationsReceived: 150,
-  peopleHelped: 1200
+interface DashboardStats {
+  activeRequests: number
+  pendingDeliveries: number
+  medicationsReceived: number
+  peopleHelped: number
 }
 
-const recentRequests = [
-  {
-    id: 1,
-    medication: "Amoxicillin 500mg",
-    quantity: 1000,
-    status: "Pending",
-    requestDate: "2024-03-15",
-    donor: "Red Cross",
-    urgency: "High",
-    image: "https://placehold.co/400x300"
-  },
-  {
-    id: 2,
-    medication: "Paracetamol 650mg",
-    quantity: 5000,
-    status: "Approved",
-    requestDate: "2024-03-14",
-    donor: "Doctors Without Borders",
-    urgency: "Medium",
-    image: "https://placehold.co/400x300"
-  },
-  {
-    id: 3,
-    medication: "First Aid Kit",
-    quantity: 50,
-    status: "In Transit",
-    requestDate: "2024-03-13",
-    donor: "WHO",
-    urgency: "Low",
-    image: "https://placehold.co/400x300"
-  },
-  {
-    id: 4,
-    medication: "Insulin",
-    quantity: 200,
-    status: "Pending",
-    requestDate: "2024-03-12",
-    donor: "Local Hospital",
-    urgency: "High",
-    image: "https://placehold.co/400x300"
-  }
-]
+async function fetchDashboardStats() {
+  const response = await axios.get<DashboardStats>('/api/dashboard/ngo/stats')
+  return response.data
+}
 
-const availableMedications = [
-  {
-    id: 1,
-    name: "Amoxicillin 500mg",
-    category: "Antibiotics",
-    quantity: 5000,
-    expiryDate: "2025-06-15",
-    donor: "Red Cross",
-    status: "Available",
-    image: "https://placehold.co/400x300"
-  },
-  {
-    id: 2,
-    name: "Paracetamol 650mg",
-    category: "Pain Relief",
-    quantity: 10000,
-    expiryDate: "2025-08-20",
-    donor: "Doctors Without Borders",
-    status: "Low Stock",
-    image: "https://placehold.co/400x300"
-  },
-  {
-    id: 3,
-    name: "First Aid Kit",
-    category: "First Aid",
-    quantity: 200,
-    expiryDate: "2026-01-10",
-    donor: "WHO",
-    status: "Available",
-    image: "https://placehold.co/400x300"
-  },
-  {
-    id: 4,
-    name: "Insulin",
-    category: "Diabetes",
-    quantity: 0,
-    expiryDate: "2025-12-25",
-    donor: "Local Hospital",
-    status: "Out of Stock",
-    image: "https://placehold.co/400x300"
-  }
-]
+async function fetchRecentRequests() {
+  const response = await axios.get<{ data: Request[] }>('/api/requests/list')
+  return response.data.data.slice(0, 4)
+}
+
+async function fetchAvailableMedications() {
+  const response = await axios.get<{ data: Medication[] }>('/api/medications/list', {
+    params: { status: 'available' }
+  })
+  return response.data.data.slice(0, 4)
+}
 
 export default function NgoDashboardPage() {
+  const { data: stats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['ngo-dashboard-stats'],
+    queryFn: fetchDashboardStats,
+    refetchInterval: 30000
+  })
+
+  const { data: recentRequests, isLoading: isLoadingRequests } = useQuery({
+    queryKey: ['recent-requests'],
+    queryFn: fetchRecentRequests,
+    refetchInterval: 30000
+  })
+
+  const { data: availableMedications, isLoading: isLoadingMedications } = useQuery({
+    queryKey: ['available-medications'],
+    queryFn: fetchAvailableMedications,
+    refetchInterval: 30000
+  })
+
+  const isLoading = isLoadingStats || isLoadingRequests || isLoadingMedications
+
+  if (isLoading) {
+    return <NgoDashboardLoading />
+  }
+
   return (
     <div className="flex-1 space-y-4 p-4 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -119,26 +76,27 @@ export default function NgoDashboardPage() {
         </div>
       </div>
 
+      <StatisticsCards stats={stats} />
+
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="requests">Requests</TabsTrigger>
           <TabsTrigger value="medications">Medications</TabsTrigger>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <StatisticsCards stats={stats} />
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
             <RecentRequests requests={recentRequests} />
             <AvailableMedications medications={availableMedications} />
           </div>
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <TabsContent value="requests" className="space-y-4">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+            <RecentRequests requests={recentRequests} />
             <RequestTrends />
-            <BeneficiaryGrowth />
           </div>
         </TabsContent>
 
@@ -146,8 +104,11 @@ export default function NgoDashboardPage() {
           <AvailableMedications medications={availableMedications} />
         </TabsContent>
 
-        <TabsContent value="profile" className="space-y-4">
-          <ProfileForm />
+        <TabsContent value="analytics" className="space-y-4">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+            <RequestTrends />
+            <BeneficiaryGrowth />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

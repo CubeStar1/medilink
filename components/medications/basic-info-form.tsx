@@ -3,10 +3,32 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Pill, Package2, Layers } from "lucide-react"
+import { Pill, Layers } from "lucide-react"
 import { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
 import { formSchema } from "./schema"
+
+const categories = [
+  "Antibiotics",
+  "Analgesics",
+  "Antivirals",
+  "Antidiabetics",
+  "Cardiovascular",
+  "Respiratory",
+  "Gastrointestinal",
+  "Other"
+] as const;
+
+const units = [
+  "Tablets",
+  "Capsules",
+  "Bottles",
+  "Vials",
+  "Ampoules",
+  "Strips",
+  "Boxes",
+  "Other"
+] as const;
 
 interface BasicInfoFormProps {
   form: UseFormReturn<z.infer<typeof formSchema>>
@@ -47,40 +69,15 @@ export function BasicInfoForm({ form }: BasicInfoFormProps) {
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="antibiotics">
-                    <div className="flex items-center gap-2">
-                      <Package2 className="h-4 w-4" />
-                      <span>Antibiotics</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="painRelief">
-                    <div className="flex items-center gap-2">
-                      <Package2 className="h-4 w-4" />
-                      <span>Pain Relief</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="firstAid">
-                    <div className="flex items-center gap-2">
-                      <Package2 className="h-4 w-4" />
-                      <span>First Aid</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="vaccines">
-                    <div className="flex items-center gap-2">
-                      <Package2 className="h-4 w-4" />
-                      <span>Vaccines</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="chronic">
-                    <div className="flex items-center gap-2">
-                      <Package2 className="h-4 w-4" />
-                      <span>Chronic Disease</span>
-                    </div>
-                  </SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category.toLowerCase()}>
+                      {category}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -125,11 +122,11 @@ export function BasicInfoForm({ form }: BasicInfoFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="tablets">Tablets</SelectItem>
-                    <SelectItem value="capsules">Capsules</SelectItem>
-                    <SelectItem value="bottles">Bottles</SelectItem>
-                    <SelectItem value="vials">Vials</SelectItem>
-                    <SelectItem value="kits">Kits</SelectItem>
+                    {units.map((unit) => (
+                      <SelectItem key={unit} value={unit.toLowerCase()}>
+                        {unit}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

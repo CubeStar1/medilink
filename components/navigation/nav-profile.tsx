@@ -19,16 +19,21 @@ import {
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import Avatar from "@/components/supaauth/avatar"
-import { createSupabaseBrowser } from "@/lib/supabase/client"
+import { useAuth } from "@/lib/context/auth-context"
+import type { User as FirebaseUser } from 'firebase/auth'
 
-export function NavProfile({ user }: { user: any }) {
+interface NavProfileProps {
+  user: FirebaseUser;
+}
+
+export function NavProfile({ user }: NavProfileProps) {
   const router = useRouter()
   const [isSignOut, startSignOut] = useTransition()
+  const { logout } = useAuth()
 
   const signout = () => {
     startSignOut(async () => {
-      const supabase = createSupabaseBrowser()
-      await supabase.auth.signOut()
+      await logout()
       router.push("/signin")
     })
   }

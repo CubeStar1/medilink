@@ -20,9 +20,10 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { NavSection } from "@/components/navigation/nav-section"
-import useUser from "@/hooks/use-user";
 import { NavProfile } from "@/components/navigation/nav-profile";
 import ManageProfile from "@/components/supaauth/manage-profile";
+import Image from "next/image";
+import { useAuth } from "@/lib/context/auth-context";
 
 
 const navigationItems = [
@@ -47,7 +48,7 @@ const donorItems = [
   },
   {
     title: "Add Medication",
-    href: "/medications/add",
+    href: "/donations/add",
     icon: Pill,
     description: "List new medications",
   },
@@ -118,23 +119,19 @@ const adminItems = [
 
 export function AppSidebar() {
 
-  const { data: user } = useUser()
+  const { user } = useAuth()
 
   if (!user) return null
   return (
     <Sidebar>
       <SidebarHeader>
         <div className="px-6 py-4 border-b flex items-center gap-2">
-          {/* <Image 
-            src="/medicine-chain-logo.png" 
-            alt="Medicine Chain" 
-            width={40} 
-            height={40}
-            // Fallback if image doesn't exist yet
-            onError={(e) => {
-              e.currentTarget.src = "https://placehold.co/40x40"
-            }}
-          /> */}
+          <Image 
+            src="/medilink-logo.webp" 
+            alt="MediLink" 
+            width={80} 
+            height={80}
+          />
           <h1 className="text-sm font-semibold">MediLink</h1>
         </div>
       </SidebarHeader>

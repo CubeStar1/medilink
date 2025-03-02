@@ -36,9 +36,6 @@ const generateChartData = () => {
 const chartData = generateChartData()
 
 const chartConfig = {
-  views: {
-    label: "Donations Overview",
-  },
   donations: {
     label: "Number of Donations",
     color: "hsl(var(--chart-1))",
@@ -51,7 +48,7 @@ const chartConfig = {
 
 export function Overview() {
   const [activeChart, setActiveChart] = 
-    React.useState<keyof typeof chartConfig>("donations")
+    React.useState<"donations" | "value">("donations")
 
   const total = React.useMemo(
     () => ({
@@ -71,22 +68,21 @@ export function Overview() {
           </CardDescription>
         </div>
         <div className="flex">
-          {["donations", "value"].map((key) => {
-            const chart = key as keyof typeof chartConfig
+          {(["donations", "value"] as const).map((key) => {
             return (
               <button
-                key={chart}
-                data-active={activeChart === chart}
+                key={key}
+                data-active={activeChart === key}
                 className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-                onClick={() => setActiveChart(chart)}
+                onClick={() => setActiveChart(key)}
               >
                 <span className="text-xs text-muted-foreground">
-                  {chartConfig[chart].label}
+                  {chartConfig[key].label}
                 </span>
                 <span className="text-lg font-bold leading-none sm:text-3xl">
-                  {chart === 'value' 
-                    ? `$${total[chart].toLocaleString()}`
-                    : total[chart].toLocaleString()}
+                  {key === 'value' 
+                    ? `$${total[key].toLocaleString()}`
+                    : total[key].toLocaleString()}
                 </span>
               </button>
             )

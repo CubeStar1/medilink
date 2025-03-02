@@ -1,16 +1,32 @@
 "use client"
 
+import { FileUp, ImageIcon, FileText, File, X, AlertCircle, FileStack } from "lucide-react"
+import { useState, ChangeEvent } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileStack, Upload, FileText, X, AlertCircle } from "lucide-react"
-import { useState } from "react"
 
 export function DocumentationForm() {
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [error, setError] = useState<string | null>(null)
 
-  // Simulate file upload
-  const handleFileUpload = () => {
-    const newFile = `Document-${uploadedFiles.length + 1}.pdf`
-    setUploadedFiles([...uploadedFiles, newFile])
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+
+    const newFiles = Array.from(files)
+    const totalSize = newFiles.reduce((acc, file) => acc + file.size, 0)
+    
+    if (totalSize > 10 * 1024 * 1024) { // 10MB limit
+      setError("Total file size exceeds 10MB limit")
+      return
+    }
+
+    setError(null)
+    setSelectedFiles(prev => [...prev, ...newFiles])
+  }
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index))
   }
 
   return (
@@ -20,47 +36,121 @@ export function DocumentationForm() {
         <h2 className="text-lg font-semibold">Documentation</h2>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <div 
-          onClick={handleFileUpload}
-          className="group relative border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 cursor-pointer transition-all hover:border-primary"
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-muted/50 to-muted/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
-          <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground group-hover:text-primary transition-colors" />
-          <p className="text-sm text-muted-foreground mb-1 group-hover:text-foreground transition-colors">
-            Drag and drop or click to upload medication photos
-          </p>
-          <p className="text-xs text-muted-foreground group-hover:text-foreground/80 transition-colors">
-            Supported formats: JPG, PNG, PDF
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          {uploadedFiles.map((file, index) => (
-            <div 
-              key={index} 
-              className="flex items-center justify-between p-2 bg-muted rounded-lg hover:bg-muted/70 transition-colors group"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center gap-4 p-6">
+            <div className="rounded-full bg-primary/10 p-4">
+              <ImageIcon className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-center">
+              <h3 className="font-medium">Upload Images</h3>
+              <p className="text-sm text-muted-foreground">
+                Add photos of the medication
+              </p>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              id="image-upload"
+              onChange={handleFileChange}
+            />
+            <label
+              htmlFor="image-upload"
+              className="flex cursor-pointer items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{file}</span>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => setUploadedFiles(files => files.filter((_, i) => i !== index))}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <FileUp className="h-4 w-4" />
+              Choose Files
+            </label>
+          </CardContent>
+        </Card>
+
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center gap-4 p-6">
+            <div className="rounded-full bg-primary/10 p-4">
+              <FileText className="h-6 w-6 text-primary" />
             </div>
-          ))}
-          {uploadedFiles.length === 0 && (
-            <div className="flex items-center justify-center h-[120px] text-sm text-muted-foreground">
-              No files uploaded yet
+            <div className="text-center">
+              <h3 className="font-medium">Upload Prescriptions</h3>
+              <p className="text-sm text-muted-foreground">
+                Add any relevant prescriptions
+              </p>
             </div>
-          )}
-        </div>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              multiple
+              className="hidden"
+              id="prescription-upload"
+              onChange={handleFileChange}
+            />
+            <label
+              htmlFor="prescription-upload"
+              className="flex cursor-pointer items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <FileUp className="h-4 w-4" />
+              Choose Files
+            </label>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center gap-4 p-6">
+          <div className="rounded-full bg-primary/10 p-4">
+            <File className="h-6 w-6 text-primary" />
+          </div>
+          <div className="text-center">
+            <h3 className="font-medium">Other Documents</h3>
+            <p className="text-sm text-muted-foreground">
+              Add any other relevant documentation
+            </p>
+          </div>
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx,.txt"
+            multiple
+            className="hidden"
+            id="other-upload"
+            onChange={handleFileChange}
+          />
+          <label
+            htmlFor="other-upload"
+            className="flex cursor-pointer items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <FileUp className="h-4 w-4" />
+            Choose Files
+          </label>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-2">
+        {selectedFiles.map((file, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between p-2 bg-muted rounded-md"
+          >
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span className="text-sm">{file.name}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => removeFile(index)}
+              className="h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        {error && (
+          <div className="flex items-center gap-2 text-destructive text-sm">
+            <AlertCircle className="h-4 w-4" />
+            <span>{error}</span>
+          </div>
+        )}
       </div>
 
       <div className="flex items-start gap-4 p-4 rounded-lg bg-yellow-50 dark:bg-yellow-950/50 border border-yellow-200 dark:border-yellow-900">

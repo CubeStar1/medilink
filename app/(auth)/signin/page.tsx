@@ -1,15 +1,11 @@
-import React from 'react'
-import Signin from '@/components/supaauth/signin'
+import SignIn from '@/components/firebaseauth/signin';
+import { Metadata } from 'next';
 
+export const metadata: Metadata = {
+  title: 'Sign In - MediLink',
+  description: 'Sign in to your MediLink account',
+};
 
-
-
-const page = () => {
-  return (
-    <div className="flex justify-center items-center h-[calc(100vh-6rem)]">
-        <Signin />
-    </div>
-  )
+export default function SignInPage() {
+  return <SignIn />;
 }
-
-export default page

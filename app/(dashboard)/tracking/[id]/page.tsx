@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Package2, Truck, ThermometerSun } from "lucide-react"
+import { use } from 'react'
+
 
 // Temporary data for demonstration
 const trackingData = {
@@ -143,7 +145,8 @@ const currentHandler = {
   since: "2024-03-20T13:00:00"
 }
 
-export default function TrackingPage({ params }: { params: { id: string } }) {
+export default function TrackingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between">
@@ -152,7 +155,7 @@ export default function TrackingPage({ params }: { params: { id: string } }) {
           <p className="text-muted-foreground">Track your medication delivery in real-time</p>
         </div>
         <div className="flex items-center gap-2">
-          <p className="text-sm text-muted-foreground">ID: {params.id}</p>
+          <p className="text-sm text-muted-foreground">ID: {id}</p>
           <Badge className={getStatusColor(trackingData.status)}>
             {trackingData.status}
           </Badge>

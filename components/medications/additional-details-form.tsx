@@ -12,7 +12,7 @@ import { format } from "date-fns"
 import { Calendar as CalendarIcon, FileText, Thermometer, Barcode } from "lucide-react"
 import { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
-import { formSchema } from "./schema"
+import { formSchema, temperatureOptions } from "./schema"
 
 interface AdditionalDetailsFormProps {
   form: UseFormReturn<z.infer<typeof formSchema>>
@@ -58,7 +58,7 @@ export function AdditionalDetailsForm({ form }: AdditionalDetailsFormProps) {
                     selected={field.value}
                     onSelect={field.onChange}
                     disabled={(date) =>
-                      date < new Date() || date > new Date("2100-01-01")
+                      date < new Date() || date < new Date("1900-01-01")
                     }
                     initialFocus
                   />
@@ -78,34 +78,18 @@ export function AdditionalDetailsForm({ form }: AdditionalDetailsFormProps) {
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select storage requirements" />
+                    <SelectValue placeholder="Select storage temperature" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="room">
-                    <div className="flex items-center gap-2">
-                      <Thermometer className="h-4 w-4" />
-                      <span>Room Temperature (20-25°C)</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="cool">
-                    <div className="flex items-center gap-2">
-                      <Thermometer className="h-4 w-4" />
-                      <span>Cool (8-15°C)</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="refrigerated">
-                    <div className="flex items-center gap-2">
-                      <Thermometer className="h-4 w-4" />
-                      <span>Refrigerated (2-8°C)</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="frozen">
-                    <div className="flex items-center gap-2">
-                      <Thermometer className="h-4 w-4" />
-                      <span>Frozen (-20°C)</span>
-                    </div>
-                  </SelectItem>
+                  {temperatureOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        <Thermometer className="h-4 w-4" />
+                        <span>{option.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -140,7 +124,7 @@ export function AdditionalDetailsForm({ form }: AdditionalDetailsFormProps) {
                 <FormControl>
                   <Textarea
                     placeholder="Enter medication composition"
-                    className="min-h-[120px] resize-none"
+                    className="min-h-[100px]"
                     {...field}
                   />
                 </FormControl>
@@ -157,8 +141,8 @@ export function AdditionalDetailsForm({ form }: AdditionalDetailsFormProps) {
                 <FormLabel>Description *</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Enter medication description"
-                    className="min-h-[120px] resize-none"
+                    placeholder="Enter additional information about the medication"
+                    className="min-h-[100px]"
                     {...field}
                   />
                 </FormControl>

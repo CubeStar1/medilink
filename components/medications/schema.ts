@@ -1,31 +1,39 @@
 import * as z from "zod"
 
+export const temperatureOptions = [
+  { label: "Room Temperature (20-25°C)", value: "room", temp: 23 },
+  { label: "Cool (8-15°C)", value: "cool", temp: 12 },
+  { label: "Refrigerated (2-8°C)", value: "refrigerated", temp: 5 },
+  { label: "Frozen (-15 to -25°C)", value: "frozen", temp: -20 },
+] as const;
+
 export const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Medication name must be at least 2 characters.",
-  }),
-  category: z.string({
-    required_error: "Please select a category.",
-  }),
-  quantity: z.number().min(1, {
-    message: "Quantity must be at least 1.",
-  }),
-  unit: z.string({
-    required_error: "Please select a unit.",
-  }),
+  // Basic Information
+  name: z.string().min(1, "Medication name is required"),
+  category: z.string().min(1, "Category is required"),
+  quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
+  unit: z.string().min(1, "Unit is required"),
+
+  // Additional Details
   expiryDate: z.date({
-    required_error: "Please select an expiry date.",
+    required_error: "Expiry date is required",
+    invalid_type_error: "Invalid date format",
+  }).refine((date) => date > new Date(), {
+    message: "Expiry date must be in the future",
   }),
-  storageTemp: z.string({
-    required_error: "Please specify storage temperature requirements.",
+  
+  storageTemp: z.enum(["room", "cool", "refrigerated", "frozen"] as const, {
+    required_error: "Storage temperature is required",
   }),
-  description: z.string().min(10, {
-    message: "Description must be at least 10 characters.",
-  }),
-  composition: z.string().min(5, {
-    message: "Composition must be at least 5 characters.",
-  }),
-  batchNumber: z.string().min(3, {
-    message: "Batch number must be at least 3 characters.",
-  }),
-}) 
+
+  batchNumber: z.string().min(1, "Batch number is required"),
+  composition: z.string().min(1, "Composition is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+
+  // Documentation
+  documents: z.object({
+    images: z.array(z.string()).optional(),
+    prescriptions: z.array(z.string()).optional(),
+    other: z.array(z.string()).optional(),
+  }).optional(),
+}); 

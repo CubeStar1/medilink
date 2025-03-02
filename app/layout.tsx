@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/global/theme-provider"
 // import { Header } from '@/components/global/header'
 import { Toaster } from "@/components/ui/sonner"
 import QueryProvider from '@/components/global/query-provider'
+import { AuthProvider } from '@/lib/context/auth-context'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,19 +20,21 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <body className={`${inter.className} h-full`}>
-        <QueryProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          <Toaster />
-        </ThemeProvider>
-      </QueryProvider>
+        <AuthProvider>
+          <QueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </QueryProvider>
+        </AuthProvider>
+        <Toaster />
       </body>
     </html>
   )

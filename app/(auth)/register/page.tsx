@@ -1,12 +1,12 @@
-import Register from '@/components/supaauth/register'
-import React from 'react'
+"use client";
+import Register from '@/components/firebaseauth/register';
+import { Suspense } from 'react'
 
-function page() {
-  return (
-    <div className="flex justify-center items-center h-[calc(100vh-6rem)]">
-        <Register />
-    </div>
-  )
+
+export default function RegisterPage() {
+  return(
+    <Suspense>
+    <Register />
+    </Suspense>
+  ) 
 }
-
-export default page

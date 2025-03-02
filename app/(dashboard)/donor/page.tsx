@@ -35,7 +35,7 @@ export default function DonorDashboardPage() {
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="space-y-4">
-            <OverviewSection />
+            <OverviewSection/>
           </TabsContent>
           <TabsContent value="analytics">
             <Analytics />

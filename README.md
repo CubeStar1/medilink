@@ -68,8 +68,8 @@
 
 **API Integration:**
 - [ ] Integrate Firebase Auth:
-  - [ ] `/api/auth/signup` - Registration
-  - [ ] `/api/auth/login` - Authentication
+  - [x] `/api/auth/signup` - Registration
+  - [x] `/api/auth/login` - Authentication
   - [ ] `/api/auth/verify` - Verification
   - [ ] `/api/auth/reset` - Password reset
 
@@ -85,10 +85,10 @@
 
 **API Integration:**
 - [ ] Implement donation management:
-  - [ ] `/api/donations/create` - New donations
-  - [ ] `/api/donations/list` - Listing
-  - [ ] `/api/donations/stats` - Metrics
-  - [ ] `/api/donations/status` - Updates
+  - [x] `/api/medications/create` - New donations
+  - [x] `/api/medications/list` - Listing
+  - [ ] `/api/medications/stats` - Metrics
+  - [x] `/api/medications/status` - Updates
 
 #### Step 3: NGO Dashboard
 **Pages & Components:**
@@ -102,9 +102,9 @@
 
 **API Integration:**
 - [ ] Connect request system:
-  - [ ] `/api/requests/create` - New requests
-  - [ ] `/api/requests/status` - Status tracking
-  - [ ] `/api/inventory/available` - Available items
+  - [x] `/api/requests/create` - New requests
+  - [x] `/api/requests/status` - Status tracking
+  - [x] `/api/medications/list` - Available items
   - [ ] `/api/requests/timeline` - Request tracking
 
 #### Step 4: Profile & Settings

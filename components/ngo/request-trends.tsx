@@ -16,15 +16,20 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useQuery } from "@tanstack/react-query"
+import axios from "axios"
 
-const monthlyData = [
-  { month: "January", requests: 65, fulfilled: 45 },
-  { month: "February", requests: 59, fulfilled: 40 },
-  { month: "March", requests: 80, fulfilled: 60 },
-  { month: "April", requests: 81, fulfilled: 70 },
-  { month: "May", requests: 56, fulfilled: 45 },
-  { month: "June", requests: 55, fulfilled: 45 },
-]
+interface AnalyticsData {
+  trendsData: Array<{
+    month: string
+    requests: number
+    fulfilled: number
+  }>
+  metrics: {
+    requestsChange: number
+    fulfillmentRate: number
+  }
+}
 
 const trendConfig = {
   requests: {
@@ -37,17 +42,44 @@ const trendConfig = {
   },
 } satisfies ChartConfig
 
+async function fetchAnalytics() {
+  const response = await axios.get<AnalyticsData>('/api/dashboard/ngo/analytics')
+  return response.data
+}
+
 export function RequestTrends() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['ngo-analytics'],
+    queryFn: fetchAnalytics,
+    refetchInterval: 30000 // Refetch every 30 seconds
+  })
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Request Trends</CardTitle>
+          <CardDescription>Loading analytics data...</CardDescription>
+        </CardHeader>
+        <CardContent className="h-[300px] flex items-center justify-center">
+          <div className="animate-pulse w-full h-full bg-muted rounded-md" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const isPositiveChange = (data?.metrics.requestsChange ?? 0) > 0
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Request Trends</CardTitle>
-        <CardDescription>Monthly request patterns for 2024</CardDescription>
+        <CardDescription>Monthly request patterns for {new Date().getFullYear()}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={trendConfig}>
           <LineChart
-            data={monthlyData}
+            data={data?.trendsData}
             margin={{
               left: 12,
               right: 12,
@@ -84,10 +116,20 @@ export function RequestTrends() {
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">
-          Requests increased by 12.5% <TrendingUp className="h-4 w-4 text-green-500" />
+          Requests {isPositiveChange ? 'increased' : 'decreased'} by {Math.abs(data?.metrics.requestsChange ?? 0)}%{' '}
+          {isPositiveChange ? (
+            <TrendingUp className="h-4 w-4 text-green-500" />
+          ) : (
+            <TrendingDown className="h-4 w-4 text-red-500" />
+          )}
         </div>
         <div className="leading-none text-muted-foreground">
-          Fulfillment rate at 85% <TrendingUp className="inline h-4 w-4 text-green-500" />
+          Fulfillment rate at {data?.metrics.fulfillmentRate ?? 0}%{' '}
+          {(data?.metrics.fulfillmentRate ?? 0) >= 80 ? (
+            <TrendingUp className="inline h-4 w-4 text-green-500" />
+          ) : (
+            <TrendingDown className="inline h-4 w-4 text-red-500" />
+          )}
         </div>
       </CardFooter>
     </Card>
