@@ -22,12 +22,12 @@ const components = [
     href: "/",
   },
   {
-    title: "About",
-    href: "/about",
+    title: "Dashboard",
+    href: "/dashboard",
   },
   {
-    title: "Features",
-    href: "/#features",
+    title: "About",
+    href: "/about",
   },
   {
     title: "Impact",
@@ -37,24 +37,34 @@ const components = [
 
 const solutions = [
   {
-    title: "For Donors",
+    title: "Donor Portal",
     href: "/donor",
-    description: "Pharmaceutical companies and hospitals looking to donate surplus medicine",
+    description: "Manage your medical donations and track their impact",
   },
   {
-    title: "For NGOs",
+    title: "NGO Portal",
     href: "/ngo",
-    description: "Verified NGOs seeking medical supplies for communities in need",
+    description: "Access available medications and manage requests",
   },
   {
-    title: "Medicine Tracking",
+    title: "Add Medication",
+    href: "/donations/add",
+    description: "List new medications for donation",
+  },
+  {
+    title: "Available Medications",
+    href: "/medications",
+    description: "Browse and request available medical supplies",
+  },
+  {
+    title: "Tracking Center",
     href: "/tracking",
     description: "Real-time tracking and monitoring of medical donations",
   },
   {
-    title: "Impact Dashboard",
-    href: "/impact",
-    description: "Measure and visualize your social impact",
+    title: "QR Verification",
+    href: "/tracking/scan",
+    description: "Scan and verify medication authenticity",
   },
 ]
 
@@ -65,7 +75,7 @@ export function Header() {
       <div className="flex h-16 items-center justify-between px-4 max-w-7xl mx-auto">
         <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">
-            {/* <Image src="/idea-lab-round.png" alt="Health Monitor" width={32} height={32} /> */}
+            <Image src="/medilink-logo.webp" alt="MediLink logo" width={50} height={50} />
             <span className="text-xl font-bold">MediLink</span>
           </Link>
         </div>
