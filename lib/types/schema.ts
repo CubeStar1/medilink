@@ -2,9 +2,11 @@ export interface UserProfile {
   uid: string;
   email: string;
   role: 'donor' | 'ngo' | 'individual' | 'admin';
+  status: 'active' | 'inactive' | 'suspended';
   isVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
+  lastActive?: Date;
   displayName?: string;
   phoneNumber?: string;
   address?: {
@@ -14,6 +16,10 @@ export interface UserProfile {
     postalCode: string;
     country: string;
   };
+  // Status tracking
+  statusUpdatedBy?: string;
+  statusUpdatedAt?: Date;
+  statusReason?: string;
   // Fields specific to NGOs
   organization?: {
     name: string;
@@ -119,4 +125,21 @@ export interface Request {
 export interface  MedicationWithRequests extends Omit<Medication, 'location'> {
   location?: string;
   requests: Request[];
+}
+
+// Activity Log interface for user actions
+export interface ActivityLog {
+  id: string;
+  userId: string;
+  adminId?: string;
+  action: 'login' | 'logout' | 'profile_update' | 'status_update' | 'verification' | 'password_change';
+  details?: {
+    newStatus?: UserProfile['status'];
+    reason?: string;
+    changes?: Record<string, any>;
+    location?: string;
+    device?: string;
+  };
+  timestamp: Date;
+  ip?: string;
 } 

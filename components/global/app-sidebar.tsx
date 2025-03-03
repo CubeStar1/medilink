@@ -99,7 +99,7 @@ const trackingItems = [
 const adminItems = [
   {
     title: "Admin Dashboard",
-    href: "/admin/dashboard",
+    href: "/admin",
     icon: ShieldCheck,
     description: "Platform administration",
   },
